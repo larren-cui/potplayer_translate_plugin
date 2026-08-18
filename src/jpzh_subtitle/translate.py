@@ -14,9 +14,11 @@ from typing import Protocol
 
 logger = logging.getLogger(__name__)
 
-# Sakura 翻译提示词（v0.9 系列，Qwen2 chat 格式经 llama-server 的 OpenAI 接口）
+# Sakura 翻译提示词（v0.9 系列，来自官方 README）
+# https://github.com/SakuraLLM/SakuraLLM#推理
 SAKURA_SYSTEM = (
-    "你是一个轻小说翻译模型，可以流畅通顺地使用日本轻小说的文风将日文翻译成简体中文。"
+    "你是一个轻小说翻译模型，可以流畅通顺地以日本轻小说的风格将日文翻译成简体中文，"
+    "并联系上下文正确使用人称代词，不擅自添加原文中没有的代词。"
 )
 
 
@@ -49,7 +51,7 @@ class SakuraTranslator:
         *,
         base_url: str = "http://127.0.0.1:8080",
         model_name: str = "sakura",
-        max_tokens: int = 4096,
+        max_tokens: int = 1024,
         temperature: float = 0.1,
         top_p: float = 0.3,
         timeout: float = 300.0,
@@ -93,12 +95,9 @@ class SakuraTranslator:
     def translate_lines(self, ja_lines: list[str]) -> list[str]:
         if not ja_lines:
             return []
-        # 批量翻译：把多行用换行拼接，要求模型保持换行结构
-        joined = "\n".join(ja_lines)
-        user = (
-            "将下面的日文文本翻译成中文，保持原有的换行结构（每行对应一句），"
-            "直接输出译文，不要添加任何解释或编号：\n" + joined
-        )
+        # Sakura v0.9 格式：多行用 \n 拼接，模型按行返回译文
+        raw_text = "\n".join(ja_lines)
+        user = "将下面的日文文本翻译成中文：" + raw_text
         zh = self._chat([
             {"role": "system", "content": SAKURA_SYSTEM},
             {"role": "user", "content": user},
