@@ -20,6 +20,13 @@ LLM_MODEL_PATH = os.environ.get("JPZH_LLM_MODEL", str(MODELS_DIR / "sakura-14b.g
 # HuggingFace 镜像端点（国内网络下避免下载被阻断）。
 os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
 
+# llama.cpp 预编译二进制目录（含 cudart64_12.dll、cublas64_12.dll 等 CUDA 运行时库）。
+# faster-whisper/ctranslate2 加载 GPU 时需要 cuBLAS，但 speech 环境的 torch 是 CPU 版
+# 不附带 CUDA 库；此处把 llamacpp 目录加入 PATH 使其可被发现。
+LLAMACPP_DIR = MODELS_DIR / "llamacpp"
+if LLAMACPP_DIR.is_dir():
+    os.environ["PATH"] = str(LLAMACPP_DIR) + os.pathsep + os.environ.get("PATH", "")
+
 # 常见 ffmpeg 安装位置（按优先级探测）。
 _FFMPEG_CANDIDATES = [
     os.environ.get("JPZH_FFMPEG"),

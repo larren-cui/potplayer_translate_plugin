@@ -53,5 +53,6 @@ models/
 output/
 samples/
 .uv-cache/
+.tmp/
 *.wav
 *.srt

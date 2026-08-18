@@ -2,15 +2,33 @@
 from __future__ import annotations
 
 import logging
-import tempfile
+import uuid
 from pathlib import Path
 
 from .audio import extract_audio
 from .asr import ASR
+from .config import PROJECT_ROOT
 from .srt import Segment, write_srt
 from .translate import SakuraTranslator, StubTranslator, Translator
 
 logger = logging.getLogger(__name__)
+
+
+class _LocalTempDir:
+    """工作区内的临时目录（系统 temp 在沙箱中可能不可写）。"""
+
+    def __init__(self, prefix: str = "jpzh_"):
+        self._base = PROJECT_ROOT / ".tmp"
+        self._base.mkdir(parents=True, exist_ok=True)
+        self.name = self._base / f"{prefix}{uuid.uuid4().hex[:8]}"
+
+    def __enter__(self):
+        self.name.mkdir(parents=True, exist_ok=True)
+        return self.name
+
+    def __exit__(self, *exc):
+        import shutil as _sh
+        _sh.rmtree(self.name, ignore_errors=True)
 
 
 def _batched(items: list, size: int):
@@ -66,8 +84,8 @@ def run(
         tr = SakuraTranslator()
 
     try:
-        with tempfile.TemporaryDirectory(prefix="jpzh_") as tmp:
-            wav = Path(tmp) / "audio.wav"
+        with _LocalTempDir() as tmp:
+            wav = tmp / "audio.wav"
             logger.info("提取音频 -> %s", wav)
             extract_audio(video_path, wav)
 
