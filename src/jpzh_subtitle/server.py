@@ -94,8 +94,9 @@ def start_server(
         "-ngl", str(n_gpu_layers),
         "-c", str(n_ctx),
         "-t", "4",          # CPU 线程数（GPU 推理时影响小）
+        "-a", "sakura",     # API 返回的模型别名（SakuraTranslator 用）
+        "--jinja",          # 启用 Jinja chat template（Qwen2 模板从 GGUF 自动读取）
         "--metrics",
-        "-na",              # 非交互模式（避免等 stdin）
     ]
     if extra_args:
         cmd += extra_args
