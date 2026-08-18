@@ -32,11 +32,13 @@ def write_srt(segments: list[Segment], out_path: str | Path) -> Path:
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     lines: list[str] = []
-    for i, seg in enumerate(segments, start=1):
+    idx = 0
+    for seg in segments:
         text = seg.text.strip()
         if not text:
             continue
-        lines.append(str(i))
+        idx += 1
+        lines.append(str(idx))
         lines.append(f"{format_timestamp(seg.start)} --> {format_timestamp(seg.end)}")
         lines.append(text)
         lines.append("")  # 段间空行
