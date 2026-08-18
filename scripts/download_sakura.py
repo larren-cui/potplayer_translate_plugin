@@ -66,8 +66,12 @@ def main() -> int:
                         print(f"  {done/1024/1024:.0f}/{total/1024/1024:.0f}MB ({pct:.0f}%)", flush=True)
                         last = done
     print(f"下载完成: {done/1024/1024:.0f}MB", flush=True)
+    # 完整性校验：确认下载大小与远端一致
+    if total and done < total:
+        print(f"警告: 下载不完整 ({done}/{total} 字节)，保留 .part 文件以便续传。", flush=True)
+        return 1
     tmp.replace(OUT)
-    print(f"已保存: {OUT}", flush=True)
+    print(f"已保存: {OUT} ({done/1024/1024:.0f}MB)", flush=True)
     return 0
 
 

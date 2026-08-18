@@ -65,8 +65,12 @@ def main() -> int:
                         last_report = downloaded
         print(f"下载完成: {downloaded/1024/1024:.0f} MB", flush=True)
 
+    # 完整性校验
+    if total and downloaded < total:
+        print(f"警告: 下载不完整 ({downloaded}/{total} 字节)，保留 .part 文件以便续传。", flush=True)
+        return 1
     tmp.replace(DEST)
-    print(f"已保存: {DEST}", flush=True)
+    print(f"已保存: {DEST} ({downloaded/1024/1024:.0f} MB)", flush=True)
     return 0
 
 
