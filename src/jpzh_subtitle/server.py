@@ -43,13 +43,28 @@ def _port_in_use(port: int) -> bool:
         return s.connect_ex(("127.0.0.1", port)) == 0
 
 
-def wait_ready(port: int = DEFAULT_PORT, timeout: float = 180.0) -> bool:
-    """等待 llama-server 的 HTTP 端口可连。"""
+def _http_health_ok(port: int) -> bool:
+    """向 llama-server 发 HTTP GET /health，确认 HTTP 层就绪（而非仅 TCP 端口）。"""
+    import urllib.request
+    try:
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/health", method="GET")
+        with urllib.request.urlopen(req, timeout=3) as r:
+            return r.status == 200
+    except Exception:
+        return False
+
+
+def wait_ready(port: int = DEFAULT_PORT, timeout: float = 300.0) -> bool:
+    """等待 llama-server 的 HTTP /health 端点返回 200。
+
+    比 TCP 端口检查更可靠：llama-server 可能在模型加载完成前就接受 TCP 连接，
+    但 HTTP /health 在服务完全就绪后才返回 200。
+    """
     deadline = time.time() + timeout
     while time.time() < deadline:
-        if _port_in_use(port):
+        if _http_health_ok(port):
             return True
-        time.sleep(1.0)
+        time.sleep(1.5)
     return False
 
 
@@ -102,18 +117,32 @@ def start_server(
         cmd += extra_args
 
     logger.info("启动 llama-server: %s", " ".join(cmd[:1] + ["…"] + cmd[1:]))
+
+    # 重定向输出到日志文件（而非 DEVNULL），便于诊断启动失败
+    log_file = LLAMACPP_DIR.parent / "llama-server.log"
+    log_fh = open(log_file, "w", encoding="utf-8", buffering=1)
+
     proc = subprocess.Popen(
         cmd,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        stdout=log_fh,
+        stderr=subprocess.STDOUT,
         env=env,
         creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
     )
+    proc._log_fh = log_fh  # type: ignore[attr-defined]
 
-    if not wait_ready(port, timeout=240.0):
+    if not wait_ready(port, timeout=300.0):
         proc.terminate()
-        raise RuntimeError(f"llama-server 启动超时（端口 {port} 未就绪）。检查模型/显存。")
-    logger.info("llama-server 就绪 (port=%d, pid=%d)", port, proc.pid)
+        # 读取日志帮助诊断
+        try:
+            log_fh.flush()
+            diag = log_file.read_text(encoding="utf-8", errors="replace")[-800:]
+        except Exception:
+            diag = "(无法读取日志)"
+        raise RuntimeError(
+            f"llama-server 启动超时（端口 {port} 未就绪）。\n--- llama-server 日志尾部 ---\n{diag}"
+        )
+    logger.info("llama-server 就绪 (port=%d, pid=%d, log=%s)", port, proc.pid, log_file)
     return proc
 
 
@@ -127,3 +156,7 @@ def stop_server(proc: subprocess.Popen | None) -> None:
         proc.wait(timeout=10)
     except subprocess.TimeoutExpired:
         proc.kill()
+    # 关闭日志文件句柄
+    log_fh = getattr(proc, "_log_fh", None)
+    if log_fh:
+        log_fh.close()

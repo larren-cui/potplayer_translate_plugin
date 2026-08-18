@@ -54,5 +54,6 @@ output/
 samples/
 .uv-cache/
 .tmp/
+*.log
 *.wav
 *.srt
