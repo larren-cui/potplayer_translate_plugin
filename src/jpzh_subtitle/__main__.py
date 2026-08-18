@@ -31,6 +31,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--language", default="ja", help="ASR 源语言（默认 ja）")
     p.add_argument("--device", default="cuda", help="ASR 设备（cuda/cpu）")
     p.add_argument("--batch-size", type=int, default=20, help="翻译每批行数")
+    p.add_argument("--port", type=int, default=8080, help="llama-server 监听端口（默认 8080）")
+    p.add_argument("--n-ctx", type=int, default=8192, help="LLM 上下文长度（默认 8192）")
     p.add_argument("--keep-audio", action="store_true", help="保留中间音频 wav")
     p.add_argument("-v", "--verbose", action="count", default=0, help="详细日志（-v/-vv）")
     p.add_argument("-V", "--version", action="version", version=f"%(prog)s {__version__}")
@@ -48,6 +50,12 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     ensure_dirs()
+
+    # 翻译模式下，预先设置 llama-server 参数（通过环境变量传递给 server 模块）
+    if args.translate:
+        import os
+        os.environ["JPZH_LLM_PORT"] = str(args.port)
+        os.environ["JPZH_LLM_N_CTX"] = str(args.n_ctx)
 
     out = run(
         args.video,

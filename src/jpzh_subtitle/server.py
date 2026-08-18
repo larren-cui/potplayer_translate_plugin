@@ -20,7 +20,8 @@ logger = logging.getLogger(__name__)
 
 # llama-server 二进制所在目录（下载解压后）
 LLAMACPP_DIR = MODELS_DIR / "llamacpp"
-DEFAULT_PORT = 8080
+DEFAULT_PORT = int(os.environ.get("JPZH_LLM_PORT", "8080"))
+DEFAULT_N_CTX = int(os.environ.get("JPZH_LLM_N_CTX", "8192"))
 
 
 def _find_server_exe() -> str:
@@ -73,7 +74,7 @@ def start_server(
     model_path: str | None = None,
     port: int = DEFAULT_PORT,
     n_gpu_layers: int = -1,
-    n_ctx: int = 8192,
+    n_ctx: int = DEFAULT_N_CTX,
     extra_args: list[str] | None = None,
 ) -> subprocess.Popen:
     """启动 llama-server（若端口已占用则视为已运行，直接返回占位进程）。
