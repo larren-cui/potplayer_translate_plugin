@@ -47,6 +47,11 @@ def main() -> int:
 
     with requests.get(URL, stream=True, timeout=60, headers=headers) as r:
         r.raise_for_status()
+        # 服务器可能忽略 Range 头返回 200 而非 206，需从头开始
+        if have and r.status_code == 200:
+            print("服务器忽略 Range 请求(status 200)，从头下载…", flush=True)
+            have = 0
+            mode = "wb"
         downloaded = have
         last_report = downloaded
         with open(tmp, mode) as f:

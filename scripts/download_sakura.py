@@ -48,6 +48,12 @@ def main() -> int:
 
     with s.get(URL, stream=True, timeout=120, headers=headers) as r:
         r.raise_for_status()
+        # 服务器可能忽略 Range 头返回 200（完整内容）而非 206（部分内容）
+        # 此时必须从头开始写，否则 append 会产生损坏的文件
+        if have and r.status_code == 200:
+            print(f"服务器忽略 Range 请求(status 200)，从头下载…", flush=True)
+            have = 0
+            mode = "wb"
         done = have
         last = done
         with open(tmp, mode) as f:

@@ -43,6 +43,11 @@ def download(url: str, dest: Path) -> Path:
 
     with s.get(url, stream=True, timeout=120, headers=headers) as r:
         r.raise_for_status()
+        # 服务器可能忽略 Range 头返回 200 而非 206，需从头开始
+        if have and r.status_code == 200:
+            print(f"  服务器忽略 Range 请求(status 200)，从头下载 {dest.name}…", flush=True)
+            have = 0
+            mode = "wb"
         total = int(r.headers.get("Content-Length", 0)) + have
         done = have
         last = done
