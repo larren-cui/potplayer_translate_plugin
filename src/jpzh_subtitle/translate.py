@@ -83,9 +83,21 @@ class SakuraTranslator:
         for attempt in range(self._max_retries + 1):
             try:
                 r = self._session.post(url, json=payload, timeout=self._timeout)
-                r.raise_for_status()
+                # 非 200 状态码：提取 error 信息
+                if r.status_code != 200:
+                    try:
+                        err_msg = r.json().get("error", {}).get("message", r.text[:200])
+                    except Exception:
+                        err_msg = r.text[:200]
+                    raise RuntimeError(f"HTTP {r.status_code}: {err_msg}")
                 data = r.json()
-                return data["choices"][0]["message"]["content"].strip()
+                choices = data.get("choices", [])
+                if not choices:
+                    raise RuntimeError(f"响应无 choices: {str(data)[:200]}")
+                content = choices[0].get("message", {}).get("content", "")
+                if not content:
+                    raise RuntimeError(f"响应 content 为空: {str(data)[:200]}")
+                return content.strip()
             except Exception as e:  # noqa: BLE001
                 last_err = e
                 logger.warning("翻译请求失败(第%d次): %s", attempt + 1, e)

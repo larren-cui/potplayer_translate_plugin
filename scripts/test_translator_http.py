@@ -123,6 +123,47 @@ def main() -> int:
     assert result == []
     print("  ✓ 空输入返回空列表", flush=True)
 
+    # 测试 5: 错误响应重试（mock 返回 500）
+    print("\n=== 测试5: 错误响应重试 ===", flush=True)
+    tr_fail = SakuraTranslator(
+        base_url=f"http://127.0.0.1:{port}",
+        max_retries=1,
+        timeout=5.0,
+    )
+
+    class FailHandler(BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def do_POST(self):
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(b'{"error":{"message":"model not loaded"}}')
+
+        def do_GET(self):
+            self.send_response(200)
+            self.end_headers()
+
+    fail_server = HTTPServer(("127.0.0.1", port + 1), FailHandler)
+    fail_thread = threading.Thread(target=fail_server.serve_forever, daemon=True)
+    fail_thread.start()
+
+    tr_fail2 = SakuraTranslator(
+        base_url=f"http://127.0.0.1:{port + 1}",
+        max_retries=1,
+        timeout=5.0,
+    )
+    raised = False
+    try:
+        tr_fail2.translate_lines(["テスト"])
+    except RuntimeError as e:
+        raised = True
+        print(f"  捕获预期异常: {str(e)[:80]}")
+    assert raised, "应该抛出 RuntimeError"
+    print("  ✓ 错误响应正确触发重试和异常", flush=True)
+    fail_server.shutdown()
+
     server.shutdown()
     print("\n✓ 全部测试通过", flush=True)
     return 0
