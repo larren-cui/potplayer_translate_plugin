@@ -23,24 +23,28 @@ pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 ## 运行
 
-首次运行（或缺少权重时）会自动下载 Whisper（~3GB）、Sakura GGUF（~8.7GB）、llama.cpp CUDA 二进制（~612MB）到 `models/`，需联网，之后全程离线。
+**在项目根目录下用 `run.py` 调用**（无需设置环境变量、无需安装为包）。
+
+首次运行 `translate` 时会自动下载 Whisper（~3GB）、Sakura GGUF（~8.7GB）、llama.cpp CUDA 二进制（~612MB）到 `models/`，需联网，之后全程离线。
 
 ```bash
 # 产出中文字幕（自动下载权重 + 拉起本地翻译服务）
-python -m jpzh_subtitle video.mkv --translate
+python run.py "video.mkv" translate
 
 # 指定输出路径
-python -m jpzh_subtitle video.mkv --translate -o out.srt
+python run.py "video.mkv" translate -o out.srt
 
 # 只产出日文字幕（不翻译，不下载翻译模型）
-python -m jpzh_subtitle video.mkv
+python run.py "video.mkv"
 
 # 使用 CPU（无 GPU 时）
-python -m jpzh_subtitle video.mkv --translate --device cpu
+python run.py "video.mkv" translate --device cpu
 
 # 详细日志（-v / -vv）
-python -m jpzh_subtitle video.mkv --translate -vv
+python run.py "video.mkv" translate -vv
 ```
+
+`translate` 也可写成标准 flag `--translate`，二者等价；其余参数同标准 CLI（`python run.py -h` 查看全部）。
 
 输出默认与视频同名同目录：`video.zh.srt`（翻译）或 `video.ja.srt`（仅转写）。
 
