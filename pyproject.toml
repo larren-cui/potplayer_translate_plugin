@@ -5,12 +5,8 @@ description = "离线日中字幕翻译工具：视频 → 日语ASR → 中文�
 requires-python = ">=3.10"
 dependencies = [
     "faster-whisper>=1.0.0",
-    "torch>=2.0.0",
-]
-
-[project.optional-dependencies]
-llm = [
-    "llama-cpp-python>=0.3.0",
+    "ctranslate2>=4.0.0",
+    "requests>=2.28.0",
 ]
 
 [project.scripts]
