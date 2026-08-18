@@ -34,7 +34,8 @@ def _find_server_exe() -> str:
     for p in LLAMACPP_DIR.rglob("llama-server.exe"):
         return str(p)
     raise FileNotFoundError(
-        f"未找到 llama-server.exe，请先运行 scripts/download_llamacpp.py 并解压到 {LLAMACPP_DIR}"
+        f"未找到 llama-server.exe（目录 {LLAMACPP_DIR}）。运行翻译时本应自动下载，"
+        f"若失败请检查网络或手动运行下载。"
     )
 
 
@@ -94,6 +95,13 @@ def start_server(
         return ph
 
     model_path = model_path or LLM_MODEL_PATH
+
+    # 运行时自动下载缺失资产：Sakura GGUF 权重 + llama.cpp 引擎二进制
+    from .download import ensure_llamacpp, ensure_sakura
+    logger.info("确保翻译资产就绪（Sakura GGUF + llama.cpp）…")
+    ensure_llamacpp()
+    model_path = str(ensure_sakura())
+
     if not Path(model_path).is_file():
         raise FileNotFoundError(f"GGUF 模型不存在: {model_path}")
 

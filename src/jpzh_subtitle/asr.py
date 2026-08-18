@@ -24,6 +24,16 @@ class ASR:
     ):
         from faster_whisper import WhisperModel
 
+        # 默认本地权重目录缺失时自动下载（用户自定义 model 路径/名称则交给 faster-whisper）
+        if Path(model).is_dir() or (
+            model == str((Path(__file__).resolve().parents[2] / "models" / "whisper-large-v3"))
+        ):
+            try:
+                from .download import ensure_whisper
+                model = str(ensure_whisper())
+            except Exception as e:
+                logger.warning("自动下载 Whisper 权重失败，交由 faster-whisper 处理: %s", e)
+
         logger.info("加载 ASR 模型 %r (device=%s, compute_type=%s)…", model, device, compute_type)
         self._model = WhisperModel(model, device=device, compute_type=compute_type)
 

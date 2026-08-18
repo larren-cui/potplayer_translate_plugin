@@ -42,6 +42,8 @@ def main() -> int:
             env=ENV,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             cwd=str(ROOT),
         )
         # Print stdout (test results)

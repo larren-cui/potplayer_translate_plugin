@@ -11,11 +11,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 # 模型权重目录（不进版本库）。可用环境变量 JPZH_MODELS_DIR 覆盖。
 MODELS_DIR = Path(os.environ.get("JPZH_MODELS_DIR", PROJECT_ROOT / "models"))
 
-# Whisper ASR 模型：本地路径优先，否则用 HF 模型名（自动下载）。
+# Whisper ASR 模型：本地权重目录。运行时若缺失会自动下载（见 download.py）。
+# 可用环境变量 JPZH_ASR_MODEL 覆盖为 HF 模型名或自定义路径。
 _DEFAULT_ASR = str(MODELS_DIR / "whisper-large-v3")
-ASR_MODEL = os.environ.get("JPZH_ASR_MODEL", _DEFAULT_ASR if Path(_DEFAULT_ASR).is_dir() else "large-v3")
+ASR_MODEL = os.environ.get("JPZH_ASR_MODEL", _DEFAULT_ASR)
 
 # 翻译 LLM 的 GGUF 权重路径（Sakura-14B Qwen2beta v0.9.2 q4km）。
+# 运时若缺失会自动下载。
 _DEFAULT_LLM = str(MODELS_DIR / "sakura" / "sakura-14b-qwen2beta-v0.9.2-q4km.gguf")
 LLM_MODEL_PATH = os.environ.get("JPZH_LLM_MODEL", _DEFAULT_LLM)
 
