@@ -54,6 +54,7 @@ def main(argv: list[str] | None = None) -> int:
         out_srt=args.output,
         language=args.language,
         asr_model=args.asr_model,
+        device=args.device,
         translate=args.translate,
         batch_size=args.batch_size,
         keep_temp_audio=args.keep_audio,

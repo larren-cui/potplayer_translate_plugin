@@ -43,6 +43,7 @@ def run(
     *,
     language: str = "ja",
     asr_model: str = "large-v3",
+    device: str = "cuda",
     translator: Translator | None = None,
     translate: bool = False,
     batch_size: int = 20,
@@ -55,6 +56,7 @@ def run(
         out_srt: 输出 .srt 路径；None 则与视频同名、同目录，后缀 .zh.srt。
         language: ASR 源语言（ja=日语）。
         asr_model: Whisper 模型名或本地路径。
+        device: ASR 设备（cuda/cpu）。
         translator: 翻译后端；不传则用占位（原样日文）。
         translate: 是否执行翻译（False 则只产出源语言字幕）。
         batch_size: 翻译时每批合并的行数（减少 LLM 调用次数）。
@@ -72,7 +74,7 @@ def run(
         out_srt = video_path.with_suffix(suffix)
     out_srt = Path(out_srt)
 
-    asr = ASR(model=asr_model)
+    asr = ASR(model=asr_model, device=device)
     tr = translator or StubTranslator()
 
     # 若需要翻译但未显式提供翻译器，自动拉起 llama-server + Sakura

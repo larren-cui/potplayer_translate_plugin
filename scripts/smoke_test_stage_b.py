@@ -35,7 +35,7 @@ def main() -> int:
     os.environ["JPZH_LLM_MODEL"] = SAKURA_GGUF
 
     print(f"运行阶段 B: {SAMPLE.name} -> 中文 srt", flush=True)
-    out = run(SAMPLE, out_srt=OUT, language="ja", asr_model=ASR_MODEL, translate=True)
+    out = run(SAMPLE, out_srt=OUT, language="ja", asr_model=ASR_MODEL, device="cuda", translate=True)
     print(f"\n✓ 中文字幕已生成: {out}", flush=True)
     print("--- 内容 ---", flush=True)
     print(out.read_text(encoding="utf-8-sig"), flush=True)
