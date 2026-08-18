@@ -39,3 +39,19 @@ cmake_install.cmake
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+
+# 项目运行产物
+models/
+output/
+samples/
+.uv-cache/
+*.wav
+*.srt
